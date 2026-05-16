@@ -1,0 +1,55 @@
+version: "3.9"
+
+# RetailPulse AI — Docker Compose
+# Starts the app + a local MongoDB instance for development
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: retailpulse-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: retailpulse
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  seed:
+    build: .
+    container_name: retailpulse-seed
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      MONGODB_URI: mongodb://mongodb:27017/retailpulse
+      MONGODB_DB_NAME: retailpulse
+    command: python scripts/seed_data.py
+    restart: "no"
+
+  app:
+    build: .
+    container_name: retailpulse-app
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    ports:
+      - "7860:7860"
+    environment:
+      MONGODB_URI: mongodb://mongodb:27017/retailpulse
+      MONGODB_DB_NAME: retailpulse
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+      AGENT_MODEL: ${AGENT_MODEL:-gemini-2.5-flash}
+      MALL_NAME: ${MALL_NAME:-Sunrise Mall}
+      UI_PORT: 7860
+    volumes:
+      - .:/app
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:
