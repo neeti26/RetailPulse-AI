@@ -22,10 +22,11 @@ RUN pip install --no-cache-dir --upgrade pip && \
 COPY . .
 
 # Expose Gradio port
-EXPOSE 7860
+EXPOSE 8080
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD curl -f http://localhost:7860/ || exit 1
+    CMD curl -f http://localhost:${PORT:-8080}/ || exit 1
 
+ENV PORT=8080
 CMD ["python", "app.py"]

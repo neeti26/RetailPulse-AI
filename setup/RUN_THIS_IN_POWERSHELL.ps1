@@ -84,14 +84,13 @@ gcloud run deploy $SERVICE `
     --region=$REGION `
     --platform=managed `
     --allow-unauthenticated `
-    --port=7860 `
     --memory=2Gi `
     --cpu=2 `
     --timeout=300 `
     --min-instances=0 `
     --max-instances=3 `
     --set-secrets="MONGODB_URI=MONGODB_URI:latest,GOOGLE_API_KEY=GOOGLE_API_KEY:latest" `
-    --set-env-vars="MALL_NAME=Sunrise Mall,AGENT_MODEL=gemini-2.5-flash,UI_PORT=7860" `
+    --set-env-vars="MALL_NAME=Sunrise Mall,AGENT_MODEL=gemini-2.5-flash,UI_PORT=8080" `
     --project=$PROJECT
 
 # Get the live URL

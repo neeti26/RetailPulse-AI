@@ -14,7 +14,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 MALL_NAME = os.getenv("MALL_NAME", "Sunrise Mall")
-UI_PORT = int(os.getenv("UI_PORT", "7860"))
+# Cloud Run sets PORT env var — respect it, fall back to UI_PORT
+UI_PORT = int(os.getenv("PORT", os.getenv("UI_PORT", "7860")))
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Agent — lazy-loaded on first message, not at startup
