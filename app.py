@@ -7,9 +7,8 @@ Run with: python app.py
 
 import asyncio
 import os
-from typing import Generator
+import sys
 
-import gradio as gr
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -18,42 +17,51 @@ MALL_NAME = os.getenv("MALL_NAME", "Sunrise Mall")
 UI_PORT = int(os.getenv("UI_PORT", "7860"))
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Agent — lazy-loaded so the UI starts fast even if MongoDB is slow
+# Agent — lazy-loaded on first message, not at startup
 # ─────────────────────────────────────────────────────────────────────────────
 _runner = None
 _session_service = None
 _session_id = None
 _agent_loop = None
+_agent_error = None  # stores init error to show in UI
 
 
 def _get_runner():
     """Lazy-initialize the ADK runner with a dedicated event loop."""
-    global _runner, _session_service, _session_id, _agent_loop
+    global _runner, _session_service, _session_id, _agent_loop, _agent_error
 
     if _runner is not None:
         return _runner, _session_service, _session_id
 
-    from google.adk.runners import Runner
-    from google.adk.sessions import InMemorySessionService
-    from retailpulse.agent import root_agent
+    if _agent_error is not None:
+        raise RuntimeError(_agent_error)
 
-    _agent_loop = asyncio.new_event_loop()
-    _session_service = InMemorySessionService()
-    _runner = Runner(
-        agent=root_agent,
-        app_name="retailpulse_ui",
-        session_service=_session_service,
-    )
+    try:
+        from google.adk.runners import Runner
+        from google.adk.sessions import InMemorySessionService
+        from retailpulse.agent import root_agent
 
-    async def _create_session():
-        session = await _session_service.create_session(
+        _agent_loop = asyncio.new_event_loop()
+        _session_service = InMemorySessionService()
+        _runner = Runner(
+            agent=root_agent,
             app_name="retailpulse_ui",
-            user_id="mall_manager",
+            session_service=_session_service,
         )
-        return session.id
 
-    _session_id = _agent_loop.run_until_complete(_create_session())
-    return _runner, _session_service, _session_id
+        async def _create_session():
+            session = await _session_service.create_session(
+                app_name="retailpulse_ui",
+                user_id="mall_manager",
+            )
+            return session.id
+
+        _session_id = _agent_loop.run_until_complete(_create_session())
+        return _runner, _session_service, _session_id
+
+    except Exception as e:
+        _agent_error = str(e)
+        raise
 
 
 def run_agent(user_message: str, history: list) -> Generator:
@@ -345,6 +353,7 @@ HEADER_HTML = f"""
 # Build UI
 # ─────────────────────────────────────────────────────────────────────────────
 def create_ui():
+    import gradio as gr
     import plotly.graph_objects as go
 
     with gr.Blocks(
@@ -524,6 +533,8 @@ def create_ui():
 # Entry point
 # ─────────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
+    import gradio as gr  # noqa: F401 — verify gradio importable before launch
+
     print(f"\n🏬 RetailPulse AI — {MALL_NAME}")
     print(f"   MongoDB : {os.getenv('MONGODB_URI', 'mongodb://localhost:27017/retailpulse')}")
     print(f"   Model   : {os.getenv('AGENT_MODEL', 'gemini-2.5-flash')}")
