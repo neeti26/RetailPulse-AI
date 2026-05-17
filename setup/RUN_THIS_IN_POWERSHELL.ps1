@@ -15,14 +15,10 @@ $SERVICE  = "retailpulse-ai"
 $REPO     = "retailpulse"
 $MONGO    = "mongodb+srv://retailpulse:kO9ZqcXf9GfEjhAt@retailpulse-cluster.vr4ivqg.mongodb.net/retailpulse"
 $GEMINI   = "AIzaSyCnT6mtPfzDm2vk_B8qx3Awk7f-X7LLo3U"
-
-# Use timestamp tag to force fresh build every time
-$TAG      = Get-Date -Format "yyyyMMddHHmmss"
-$IMAGE    = "$REGION-docker.pkg.dev/$PROJECT/$REPO/$SERVICE`:$TAG"
+$IMAGE    = "$REGION-docker.pkg.dev/$PROJECT/$REPO/$SERVICE`:latest"
 
 Write-Host "`n========================================" -ForegroundColor Cyan
 Write-Host " RetailPulse AI — Cloud Run Deployment" -ForegroundColor Cyan
-Write-Host " Image tag: $TAG" -ForegroundColor Cyan
 Write-Host "========================================`n" -ForegroundColor Cyan
 
 # Step 1 — Enable APIs
@@ -56,12 +52,29 @@ gcloud secrets add-iam-policy-binding MONGODB_URI --member="serviceAccount:$SA" 
 gcloud secrets add-iam-policy-binding GOOGLE_API_KEY --member="serviceAccount:$SA" --role="roles/secretmanager.secretAccessor" --project=$PROJECT | Out-Null
 Write-Host "      Done`n" -ForegroundColor Green
 
-# Step 5 — Build with NO cache, new tag
-Write-Host "[5/6] Building fresh container (no cache, ~5 min)..." -ForegroundColor Yellow
-gcloud builds submit --tag $IMAGE --no-cache --project=$PROJECT
+# Step 5 — Build AND push using docker build + gcloud auth
+Write-Host "[5/6] Building and pushing container (~5 min)..." -ForegroundColor Yellow
+
+# Configure docker to use gcloud credentials for Artifact Registry
+gcloud auth configure-docker "$REGION-docker.pkg.dev" --quiet --project=$PROJECT
+
+# Write a temporary cloudbuild config that builds AND pushes
+$cbConfig = @"
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '--no-cache', '-t', '$IMAGE', '.']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', '$IMAGE']
+images:
+- '$IMAGE'
+"@
+$cbConfig | Out-File -FilePath ".\setup\cb_temp.yaml" -Encoding utf8
+
+gcloud builds submit --config=".\setup\cb_temp.yaml" --project=$PROJECT .
+Remove-Item ".\setup\cb_temp.yaml" -Force -ErrorAction SilentlyContinue
 Write-Host "      Done`n" -ForegroundColor Green
 
-# Step 6 — Deploy (no --port flag, let Cloud Run use PORT env var)
+# Step 6 — Deploy
 Write-Host "[6/6] Deploying to Cloud Run..." -ForegroundColor Yellow
 gcloud run deploy $SERVICE `
     --image=$IMAGE `
