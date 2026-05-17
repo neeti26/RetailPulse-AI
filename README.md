@@ -229,7 +229,9 @@ retailpulse-ai/
 
 ## 🚀 Deployment
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for full instructions. The short version:
+**Live Demo:** https://retailpulse-ai-725868889273.us-central1.run.app
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for full Cloud Run setup instructions.
 
 ```bash
 # Local (Docker Compose — fastest for demo)
