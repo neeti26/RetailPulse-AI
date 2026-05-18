@@ -82,39 +82,48 @@ def build_kpi_html(kpis: dict) -> str:
     fa, fc_col = _arrow(fc)
     wa, wc_col = _arrow(wc)
 
-    def card(bg, icon, label, value, sub, sub_col="#fff"):
+    def card(gradient, icon, label, value, sub, sub_col="#94a3b8", glow="rgba(59,130,246,0.3)"):
         return f"""
-        <div style="flex:1;min-width:160px;background:{bg};border-radius:16px;
-                    padding:20px 22px;color:white;box-shadow:0 6px 20px rgba(0,0,0,0.18);
-                    transition:transform .2s;" onmouseover="this.style.transform='translateY(-3px)'"
-                    onmouseout="this.style.transform='translateY(0)'">
-          <div style="font-size:1.6em;margin-bottom:6px;">{icon}</div>
-          <div style="font-size:.72em;font-weight:700;letter-spacing:1.2px;opacity:.8;">{label}</div>
-          <div style="font-size:1.9em;font-weight:800;margin:4px 0;">{value}</div>
-          <div style="font-size:.82em;color:{sub_col};">{sub}</div>
+        <div style="flex:1;min-width:160px;background:{gradient};
+                    border-radius:16px;padding:20px 22px;
+                    border:1px solid rgba(255,255,255,0.06);
+                    box-shadow:0 8px 24px {glow};
+                    transition:transform .2s,box-shadow .2s;cursor:default;"
+             onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 16px 32px {glow}'"
+             onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 8px 24px {glow}'">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div style="font-size:.68em;font-weight:700;letter-spacing:1.2px;
+                        color:rgba(255,255,255,0.55);text-transform:uppercase;">{label}</div>
+            <div style="font-size:1.4em;opacity:.8;">{icon}</div>
+          </div>
+          <div style="font-size:2em;font-weight:800;color:#f1f5f9;margin:8px 0 4px 0;
+                      letter-spacing:-.5px;">{value}</div>
+          <div style="font-size:.78em;color:{sub_col};font-weight:500;">{sub}</div>
         </div>"""
 
     return f"""
-    <div style="display:flex;gap:12px;flex-wrap:wrap;margin:8px 0 20px 0;">
-      {card("linear-gradient(135deg,#1565c0,#1a73e8)", "💰", "TODAY'S REVENUE",
+    <div style="display:flex;gap:12px;flex-wrap:wrap;padding:20px 24px 8px 24px;">
+      {card("linear-gradient(135deg,#1e3a5f,#1d4ed8)", "💰", "Today's Revenue",
             f"${kpis.get('today_revenue',0):,.0f}",
-            f"{ra} {abs(rc):.1f}% vs yesterday", rc_col)}
-      {card("linear-gradient(135deg,#1b5e20,#2e7d32)", "👣", "TODAY'S FOOTFALL",
+            f"{ra} {abs(rc):.1f}% vs yesterday", rc_col, "rgba(29,78,216,0.4)")}
+      {card("linear-gradient(135deg,#14532d,#16a34a)", "👣", "Today's Footfall",
             f"{kpis.get('today_footfall',0):,}",
-            f"{fa} {abs(fc):.1f}% vs yesterday", fc_col)}
-      {card("linear-gradient(135deg,#4a148c,#7b1fa2)", "📅", "WEEK REVENUE",
+            f"{fa} {abs(fc):.1f}% vs yesterday", fc_col, "rgba(22,163,74,0.4)")}
+      {card("linear-gradient(135deg,#3b0764,#7c3aed)", "📅", "Week Revenue",
             f"${kpis.get('week_revenue',0):,.0f}",
-            f"{wa} {abs(wc):.1f}% vs last week", wc_col)}
-      {card("linear-gradient(135deg,#e65100,#f57c00)" if al > 0 else "linear-gradient(135deg,#1b5e20,#388e3c)",
-            "🚨" if al > 0 else "✅", "OPEN ALERTS",
+            f"{wa} {abs(wc):.1f}% vs last week", wc_col, "rgba(124,58,237,0.4)")}
+      {card("linear-gradient(135deg,#7c1d1d,#dc2626)" if al > 0 else "linear-gradient(135deg,#14532d,#16a34a)",
+            "🚨" if al > 0 else "✅", "Open Alerts",
             str(al),
-            "Needs attention" if al > 0 else "All clear")}
-      {card("linear-gradient(135deg,#880e4f,#c2185b)", "🎯", "ACTIVE PROMOS",
+            "Needs attention" if al > 0 else "All clear",
+            "#fca5a5" if al > 0 else "#86efac",
+            "rgba(220,38,38,0.4)" if al > 0 else "rgba(22,163,74,0.4)")}
+      {card("linear-gradient(135deg,#831843,#db2777)", "🎯", "Active Promos",
             str(kpis.get('active_promotions',0)),
-            f"{kpis.get('total_tenants',0)} tenants total")}
-      {card("linear-gradient(135deg,#006064,#00838f)", "📊", "MONTH REVENUE",
+            f"{kpis.get('total_tenants',0)} tenants total", "#f9a8d4", "rgba(219,39,119,0.4)")}
+      {card("linear-gradient(135deg,#164e63,#0891b2)", "📊", "Month Revenue",
             f"${kpis.get('month_revenue',0):,.0f}",
-            "Month to date")}
+            "Month to date", "#67e8f9", "rgba(8,145,178,0.4)")}
     </div>"""
 
 
@@ -129,62 +138,62 @@ def load_overview():
     kpis = get_kpi_cards()
     kpi_html = build_kpi_html(kpis)
 
+    DARK_BG = "#13151f"
+    DARK_PANEL = "#1a1d27"
+    GRID = "#1e2130"
+
     # Revenue trend (30 days)
     dates, revenues = get_revenue_chart_data(30)
     rev_fig = go.Figure()
     if dates:
         rev_fig.add_trace(go.Scatter(
             x=dates, y=revenues, mode="lines+markers",
-            line=dict(color="#1a73e8", width=3),
-            marker=dict(size=6, color="#1a73e8",
-                        line=dict(color="white", width=2)),
-            fill="tozeroy", fillcolor="rgba(26,115,232,0.08)",
-            hovertemplate="<b>%{x}</b><br>Revenue: $%{y:,.0f}<extra></extra>"))
+            line=dict(color="#60a5fa", width=2.5),
+            marker=dict(size=5, color="#60a5fa", line=dict(color=DARK_BG, width=2)),
+            fill="tozeroy", fillcolor="rgba(96,165,250,0.08)",
+            hovertemplate="<b>%{x}</b><br>$%{y:,.0f}<extra></extra>"))
     rev_fig.update_layout(
-        title=dict(text="📈 30-Day Revenue Trend", font=dict(size=14, color="#1a1a1a")),
-        height=260, plot_bgcolor="#fafafa", paper_bgcolor="white",
-        yaxis=dict(tickprefix="$", tickformat=",.0f", gridcolor="#f0f0f0",
-                   zeroline=False),
-        xaxis=dict(gridcolor="#f0f0f0", tickangle=-30),
-        margin=dict(l=60, r=20, t=45, b=50), hovermode="x unified",
-        showlegend=False)
+        title=dict(text="📈 30-Day Revenue Trend", font=dict(size=13, color="#94a3b8")),
+        height=260, plot_bgcolor=DARK_PANEL, paper_bgcolor=DARK_PANEL,
+        yaxis=dict(tickprefix="$", tickformat=",.0f", gridcolor=GRID,
+                   color="#64748b", zeroline=False),
+        xaxis=dict(gridcolor=GRID, color="#64748b", tickangle=-30),
+        margin=dict(l=60, r=16, t=40, b=50), hovermode="x unified",
+        showlegend=False, font=dict(color="#94a3b8"))
 
     # Hourly footfall
     hours, counts = get_footfall_chart_data()
     ff_fig = go.Figure()
     if hours and counts:
-        max_v = max(counts)
-        min_v = min(counts)
-        colors = ["#d32f2f" if c == max_v else
-                  "#1565c0" if c == min_v else "#42a5f5"
+        max_v = max(counts) if counts else 1
+        colors = ["#f87171" if c == max_v else "#34d399" if c == min(counts) else "#60a5fa"
                   for c in counts]
-        ff_fig.add_trace(go.Bar(
-            x=hours, y=counts, marker_color=colors,
-            hovertemplate="<b>%{x}</b><br>Visitors: %{y:,}<extra></extra>"))
+        ff_fig.add_trace(go.Bar(x=hours, y=counts, marker_color=colors,
+                                hovertemplate="<b>%{x}</b><br>%{y:,} visitors<extra></extra>"))
     ff_fig.update_layout(
-        title=dict(text="👣 Today's Hourly Footfall", font=dict(size=14, color="#1a1a1a")),
-        height=260, plot_bgcolor="#fafafa", paper_bgcolor="white",
-        yaxis=dict(gridcolor="#f0f0f0", zeroline=False),
-        xaxis=dict(gridcolor="#f0f0f0"),
-        margin=dict(l=40, r=20, t=45, b=40), showlegend=False)
+        title=dict(text="👣 Today's Hourly Footfall", font=dict(size=13, color="#94a3b8")),
+        height=260, plot_bgcolor=DARK_PANEL, paper_bgcolor=DARK_PANEL,
+        yaxis=dict(gridcolor=GRID, color="#64748b", zeroline=False),
+        xaxis=dict(gridcolor=GRID, color="#64748b"),
+        margin=dict(l=40, r=16, t=40, b=40), showlegend=False,
+        font=dict(color="#94a3b8"))
 
     # Category donut
     cats, cat_revs = get_category_revenue_data()
     cat_fig = go.Figure()
     if cats:
         cat_fig.add_trace(go.Pie(
-            labels=cats, values=cat_revs, hole=0.5,
+            labels=cats, values=cat_revs, hole=0.55,
             textinfo="label+percent",
-            marker=dict(colors=["#1a73e8","#34a853","#fa7b17","#9334e6",
-                                 "#ea4335","#00bcd4","#ff9800","#607d8b"],
-                        line=dict(color="white", width=2)),
-            textfont=dict(size=11),
+            marker=dict(colors=["#60a5fa","#34d399","#f59e0b","#a78bfa",
+                                 "#f87171","#22d3ee","#fb923c","#94a3b8"],
+                        line=dict(color=DARK_BG, width=2)),
+            textfont=dict(size=11, color="#e2e8f0"),
             hovertemplate="<b>%{label}</b><br>$%{value:,.0f}<br>%{percent}<extra></extra>"))
     cat_fig.update_layout(
-        title=dict(text="🏷️ Revenue by Category (This Month)",
-                   font=dict(size=14, color="#1a1a1a")),
-        height=260, margin=dict(l=10, r=10, t=45, b=10),
-        showlegend=False, paper_bgcolor="white")
+        title=dict(text="🏷️ Revenue by Category", font=dict(size=13, color="#94a3b8")),
+        height=260, margin=dict(l=10, r=10, t=40, b=10),
+        showlegend=False, paper_bgcolor=DARK_PANEL, font=dict(color="#94a3b8"))
 
     # Zone bar
     zones, zone_revs = get_zone_revenue_data()
@@ -192,17 +201,17 @@ def load_overview():
     if zones:
         zone_fig.add_trace(go.Bar(
             x=zones, y=zone_revs,
-            marker=dict(color=zone_revs,
-                        colorscale="Blues", showscale=False,
-                        line=dict(color="white", width=1)),
+            marker=dict(color=zone_revs, colorscale=[[0,"#1e3a5f"],[1,"#60a5fa"]],
+                        showscale=False, line=dict(color=DARK_BG, width=1)),
             hovertemplate="<b>%{x}</b><br>$%{y:,.0f}<extra></extra>"))
     zone_fig.update_layout(
-        title=dict(text="🗺️ Revenue by Zone (This Month)",
-                   font=dict(size=14, color="#1a1a1a")),
-        height=260, plot_bgcolor="#fafafa", paper_bgcolor="white",
-        yaxis=dict(tickprefix="$", tickformat=",.0f", gridcolor="#f0f0f0",
-                   zeroline=False),
-        margin=dict(l=60, r=20, t=45, b=40), showlegend=False)
+        title=dict(text="🗺️ Revenue by Zone (This Month)", font=dict(size=13, color="#94a3b8")),
+        height=260, plot_bgcolor=DARK_PANEL, paper_bgcolor=DARK_PANEL,
+        yaxis=dict(tickprefix="$", tickformat=",.0f", gridcolor=GRID,
+                   color="#64748b", zeroline=False),
+        xaxis=dict(color="#64748b"),
+        margin=dict(l=60, r=16, t=40, b=40), showlegend=False,
+        font=dict(color="#94a3b8"))
 
     top = get_top_tenants_table(10)
     alerts = get_active_alerts_table()
@@ -218,11 +227,15 @@ def load_analytics():
         get_revenue_by_category_trend, get_footfall_heatmap_data,
         get_weekly_footfall_trend, get_underperformers_table)
 
+    DARK_BG = "#13151f"
+    DARK_PANEL = "#1a1d27"
+    GRID = "#1e2130"
+
     # Category trend lines
     cat_trends = get_revenue_by_category_trend(30)
     trend_fig = go.Figure()
-    colors = ["#1a73e8","#34a853","#fa7b17","#9334e6",
-              "#ea4335","#00bcd4","#ff9800","#607d8b"]
+    colors = ["#60a5fa","#34d399","#f59e0b","#a78bfa",
+              "#f87171","#22d3ee","#fb923c","#94a3b8"]
     for i, (cat, (dates, revs)) in enumerate(cat_trends.items()):
         trend_fig.add_trace(go.Scatter(
             x=dates, y=revs, mode="lines", name=cat,
@@ -230,13 +243,15 @@ def load_analytics():
             hovertemplate=f"<b>{cat}</b><br>%{{x}}<br>$%{{y:,.0f}}<extra></extra>"))
     trend_fig.update_layout(
         title=dict(text="📊 Revenue by Category — 30-Day Trend",
-                   font=dict(size=14, color="#1a1a1a")),
-        height=320, plot_bgcolor="#fafafa", paper_bgcolor="white",
-        yaxis=dict(tickprefix="$", tickformat=",.0f", gridcolor="#f0f0f0"),
-        xaxis=dict(gridcolor="#f0f0f0", tickangle=-30),
-        margin=dict(l=60, r=20, t=45, b=50),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        hovermode="x unified")
+                   font=dict(size=13, color="#94a3b8")),
+        height=320, plot_bgcolor=DARK_PANEL, paper_bgcolor=DARK_PANEL,
+        yaxis=dict(tickprefix="$", tickformat=",.0f", gridcolor=GRID,
+                   color="#64748b"),
+        xaxis=dict(gridcolor=GRID, color="#64748b", tickangle=-30),
+        margin=dict(l=60, r=20, t=40, b=50),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1,
+                    font=dict(color="#94a3b8"), bgcolor="rgba(0,0,0,0)"),
+        hovermode="x unified", font=dict(color="#94a3b8"))
 
     # Footfall heatmap
     zones, hours, matrix = get_footfall_heatmap_data()
@@ -244,16 +259,17 @@ def load_analytics():
     if zones and hours and matrix:
         heat_fig.add_trace(go.Heatmap(
             z=matrix, x=hours, y=zones,
-            colorscale="YlOrRd",
-            hovertemplate="<b>%{y}</b> at %{x}<br>Avg visitors: %{z:,.0f}<extra></extra>",
-            colorbar=dict(title="Visitors")))
+            colorscale=[[0, "#1e2130"], [0.5, "#1d4ed8"], [1, "#f59e0b"]],
+            hovertemplate="<b>%{y}</b> at %{x}<br>Avg: %{z:,.0f} visitors<extra></extra>",
+            colorbar=dict(title="Visitors", tickfont=dict(color="#94a3b8"),
+                          titlefont=dict(color="#94a3b8"))))
     heat_fig.update_layout(
         title=dict(text="🔥 Footfall Heatmap — Zone × Hour (7-Day Avg)",
-                   font=dict(size=14, color="#1a1a1a")),
-        height=320, paper_bgcolor="white",
-        xaxis=dict(title="Hour of Day"),
-        yaxis=dict(title="Zone"),
-        margin=dict(l=80, r=20, t=45, b=60))
+                   font=dict(size=13, color="#94a3b8")),
+        height=320, paper_bgcolor=DARK_PANEL,
+        xaxis=dict(title="Hour", color="#64748b", gridcolor=GRID),
+        yaxis=dict(title="Zone", color="#64748b"),
+        margin=dict(l=80, r=20, t=40, b=60), font=dict(color="#94a3b8"))
 
     # Weekly footfall trend
     ff_dates, ff_counts = get_weekly_footfall_trend()
@@ -261,19 +277,17 @@ def load_analytics():
     if ff_dates:
         ff_trend_fig.add_trace(go.Scatter(
             x=ff_dates, y=ff_counts, mode="lines+markers",
-            line=dict(color="#34a853", width=3),
-            marker=dict(size=7, color="#34a853",
-                        line=dict(color="white", width=2)),
-            fill="tozeroy", fillcolor="rgba(52,168,83,0.08)",
-            hovertemplate="<b>%{x}</b><br>Visitors: %{y:,}<extra></extra>"))
+            line=dict(color="#34d399", width=2.5),
+            marker=dict(size=6, color="#34d399", line=dict(color=DARK_BG, width=2)),
+            fill="tozeroy", fillcolor="rgba(52,211,153,0.08)",
+            hovertemplate="<b>%{x}</b><br>%{y:,} visitors<extra></extra>"))
     ff_trend_fig.update_layout(
-        title=dict(text="👣 14-Day Footfall Trend",
-                   font=dict(size=14, color="#1a1a1a")),
-        height=280, plot_bgcolor="#fafafa", paper_bgcolor="white",
-        yaxis=dict(gridcolor="#f0f0f0", zeroline=False),
-        xaxis=dict(gridcolor="#f0f0f0", tickangle=-30),
-        margin=dict(l=50, r=20, t=45, b=50), showlegend=False,
-        hovermode="x unified")
+        title=dict(text="👣 14-Day Footfall Trend", font=dict(size=13, color="#94a3b8")),
+        height=280, plot_bgcolor=DARK_PANEL, paper_bgcolor=DARK_PANEL,
+        yaxis=dict(gridcolor=GRID, color="#64748b", zeroline=False),
+        xaxis=dict(gridcolor=GRID, color="#64748b", tickangle=-30),
+        margin=dict(l=50, r=16, t=40, b=50), showlegend=False,
+        hovermode="x unified", font=dict(color="#94a3b8"))
 
     underperformers = get_underperformers_table()
     return (trend_fig, heat_fig, ff_trend_fig,
@@ -309,39 +323,197 @@ QUICK_ACTIONS = {
 }
 
 CSS = """
-.gradio-container { max-width: 1400px !important; margin: 0 auto !important; }
+/* ── Reset Gradio's bland defaults ── */
+body, .gradio-container {
+    background: #0f1117 !important;
+    font-family: 'Google Sans', 'Inter', -apple-system, sans-serif !important;
+}
+.gradio-container {
+    max-width: 1440px !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+}
 footer { display: none !important; }
-.tab-nav button { font-size: 14px !important; font-weight: 600 !important; padding: 10px 18px !important; }
-.quick-btn { text-align: left !important; justify-content: flex-start !important; font-size: 12px !important; }
-.gr-button-primary { background: linear-gradient(135deg, #1a73e8, #0d47a1) !important; border: none !important; }
+
+/* ── Tabs ── */
+.tab-nav {
+    background: #1a1d27 !important;
+    border-bottom: 1px solid #2d3142 !important;
+    padding: 0 24px !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 100 !important;
+}
+.tab-nav button {
+    color: #8b92a5 !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    padding: 14px 20px !important;
+    border-radius: 0 !important;
+    border-bottom: 3px solid transparent !important;
+    background: transparent !important;
+    transition: all .2s !important;
+}
+.tab-nav button:hover { color: #e2e8f0 !important; }
+.tab-nav button.selected {
+    color: #60a5fa !important;
+    border-bottom: 3px solid #60a5fa !important;
+    background: transparent !important;
+}
+
+/* ── Main content area ── */
+.tabitem, .tab-content, .block {
+    background: transparent !important;
+    border: none !important;
+}
+.gap, .contain {
+    background: transparent !important;
+}
+
+/* ── Cards / panels ── */
+.panel, .form {
+    background: #1a1d27 !important;
+    border: 1px solid #2d3142 !important;
+    border-radius: 12px !important;
+}
+
+/* ── Dataframes ── */
+.table-wrap, table {
+    background: #1a1d27 !important;
+    color: #e2e8f0 !important;
+    border-radius: 10px !important;
+    overflow: hidden !important;
+}
+thead tr { background: #252836 !important; }
+thead th {
+    color: #94a3b8 !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    letter-spacing: .8px !important;
+    text-transform: uppercase !important;
+    padding: 10px 14px !important;
+    border-bottom: 1px solid #2d3142 !important;
+}
+tbody tr { border-bottom: 1px solid #1e2130 !important; }
+tbody tr:hover { background: #252836 !important; }
+tbody td {
+    color: #cbd5e1 !important;
+    padding: 10px 14px !important;
+    font-size: 13px !important;
+}
+
+/* ── Buttons ── */
+button.primary, .gr-button-primary {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
+    border: none !important;
+    color: white !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    padding: 10px 20px !important;
+    box-shadow: 0 4px 12px rgba(59,130,246,0.4) !important;
+    transition: all .2s !important;
+}
+button.primary:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 16px rgba(59,130,246,0.5) !important;
+}
+button.secondary {
+    background: #1e2130 !important;
+    border: 1px solid #2d3142 !important;
+    color: #94a3b8 !important;
+    font-size: 12px !important;
+    border-radius: 8px !important;
+    text-align: left !important;
+    transition: all .15s !important;
+}
+button.secondary:hover {
+    background: #252836 !important;
+    border-color: #3b82f6 !important;
+    color: #60a5fa !important;
+}
+
+/* ── Textbox / input ── */
+textarea, input[type=text] {
+    background: #1e2130 !important;
+    border: 1px solid #2d3142 !important;
+    color: #e2e8f0 !important;
+    border-radius: 10px !important;
+    font-size: 14px !important;
+}
+textarea:focus, input[type=text]:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.15) !important;
+}
+
+/* ── Chatbot ── */
+.chatbot {
+    background: #13151f !important;
+    border: 1px solid #2d3142 !important;
+    border-radius: 12px !important;
+}
+.message.user .bubble-wrap .message-bubble-border {
+    background: linear-gradient(135deg, #1d4ed8, #3b82f6) !important;
+    border-radius: 18px 18px 4px 18px !important;
+}
+.message.bot .bubble-wrap .message-bubble-border {
+    background: #1e2130 !important;
+    border: 1px solid #2d3142 !important;
+    border-radius: 18px 18px 18px 4px !important;
+}
+
+/* ── Markdown text ── */
+.prose, p, span, label, .label-wrap {
+    color: #cbd5e1 !important;
+}
+h1, h2, h3, h4 { color: #e2e8f0 !important; }
+
+/* ── Plots ── */
+.plot-container { border-radius: 12px !important; overflow: hidden !important; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #13151f; }
+::-webkit-scrollbar-thumb { background: #2d3142; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #3b82f6; }
 """
 
 HEADER = f"""
-<div style="background:linear-gradient(135deg,#0d47a1 0%,#1565c0 40%,#1a73e8 100%);
-            padding:24px 32px 20px 32px;border-radius:0 0 20px 20px;margin-bottom:16px;
-            box-shadow:0 6px 24px rgba(13,71,161,0.45);">
-  <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
-    <div style="font-size:3.2em;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));">🏬</div>
-    <div style="flex:1;">
-      <h1 style="font-size:2em;margin:0;color:white;font-weight:800;letter-spacing:-0.5px;
-                 text-shadow:0 2px 4px rgba(0,0,0,0.2);">RetailPulse AI</h1>
-      <p style="color:rgba(255,255,255,0.88);margin:3px 0 0 0;font-size:1em;">
-        Autonomous Mall Intelligence Agent &nbsp;·&nbsp; <strong>{MALL_NAME}</strong></p>
-      <p style="color:rgba(255,255,255,0.6);margin:3px 0 0 0;font-size:.78em;letter-spacing:.3px;">
-        Google ADK &nbsp;·&nbsp; Gemini 2.5 Flash (Gemini 3) &nbsp;·&nbsp;
-        MongoDB Atlas MCP Server &nbsp;·&nbsp; Google Cloud Run</p>
+<div style="background:linear-gradient(135deg,#0f1117 0%,#1a1d27 100%);
+            padding:0;margin:0;border-bottom:1px solid #2d3142;">
+  <div style="background:linear-gradient(90deg,#1d4ed8 0%,#3b82f6 50%,#06b6d4 100%);
+              height:3px;width:100%;"></div>
+  <div style="padding:20px 32px 18px 32px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <div style="width:44px;height:44px;background:linear-gradient(135deg,#3b82f6,#06b6d4);
+                  border-radius:12px;display:flex;align-items:center;justify-content:center;
+                  font-size:1.5em;box-shadow:0 4px 12px rgba(59,130,246,0.4);">🏬</div>
+      <div>
+        <div style="font-size:1.4em;font-weight:800;color:#f1f5f9;letter-spacing:-.3px;
+                    background:linear-gradient(90deg,#60a5fa,#22d3ee);
+                    -webkit-background-clip:text;-webkit-text-fill-color:transparent;">
+          RetailPulse AI</div>
+        <div style="font-size:.78em;color:#64748b;margin-top:1px;">
+          Autonomous Mall Intelligence &nbsp;·&nbsp; <span style="color:#94a3b8;">{MALL_NAME}</span></div>
+      </div>
     </div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;">
-      <div style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);
-                  border-radius:12px;padding:10px 16px;text-align:center;backdrop-filter:blur(10px);">
-        <div style="color:rgba(255,255,255,0.65);font-size:.68em;font-weight:700;letter-spacing:1px;">TRACK</div>
-        <div style="color:white;font-weight:700;font-size:.88em;">MongoDB Partner</div>
-      </div>
-      <div style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.2);
-                  border-radius:12px;padding:10px 16px;text-align:center;backdrop-filter:blur(10px);">
-        <div style="color:rgba(255,255,255,0.65);font-size:.68em;font-weight:700;letter-spacing:1px;">HACKATHON</div>
-        <div style="color:white;font-weight:700;font-size:.88em;">Google Cloud Rapid Agent 2026</div>
-      </div>
+    <div style="flex:1;"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <span style="background:#1e2130;border:1px solid #2d3142;border-radius:20px;
+                   padding:5px 12px;font-size:.72em;color:#60a5fa;font-weight:600;">
+        ✦ Google ADK</span>
+      <span style="background:#1e2130;border:1px solid #2d3142;border-radius:20px;
+                   padding:5px 12px;font-size:.72em;color:#34d399;font-weight:600;">
+        ✦ Gemini 2.5 Flash</span>
+      <span style="background:#1e2130;border:1px solid #2d3142;border-radius:20px;
+                   padding:5px 12px;font-size:.72em;color:#f59e0b;font-weight:600;">
+        ✦ MongoDB Atlas MCP</span>
+      <span style="background:#1e2130;border:1px solid #2d3142;border-radius:20px;
+                   padding:5px 12px;font-size:.72em;color:#a78bfa;font-weight:600;">
+        ✦ Cloud Run</span>
+      <div style="background:linear-gradient(135deg,#1d4ed8,#3b82f6);border-radius:8px;
+                  padding:6px 14px;font-size:.72em;color:white;font-weight:700;
+                  box-shadow:0 2px 8px rgba(59,130,246,0.4);">
+        MongoDB Partner Track</div>
     </div>
   </div>
 </div>"""
@@ -349,11 +521,8 @@ HEADER = f"""
 
 def create_ui():
     import gradio as gr
-    import warnings
-    warnings.filterwarnings("ignore", category=UserWarning, module="gradio")
 
-    with gr.Blocks(css=CSS, title=f"RetailPulse AI — {MALL_NAME}",
-                   theme=gr.themes.Soft(primary_hue="blue", neutral_hue="slate")) as demo:
+    with gr.Blocks(title=f"RetailPulse AI — {MALL_NAME}") as demo:
 
         gr.HTML(HEADER)
 
@@ -468,22 +637,21 @@ def create_ui():
 
                         gr.Markdown("---")
                         gr.HTML("""
-                        <div style="background:linear-gradient(135deg,#f8f9ff,#eef2ff);
-                                    border-radius:14px;padding:16px;border:1px solid #c5cae9;">
-                          <div style="font-weight:800;color:#1a237e;margin-bottom:10px;font-size:.95em;">
-                            🛠️ Tech Stack</div>
-                          <div style="font-size:.8em;color:#3949ab;line-height:2;">
-                            🤖 <b>Google ADK</b> 1.33<br>
-                            ✨ <b>Gemini 2.5 Flash</b><br>
-                            🍃 <b>MongoDB Atlas MCP</b><br>
-                            ☁️ <b>Google Cloud Run</b><br>
-                            🐍 <b>Python</b> 3.12<br>
-                            🎨 <b>Gradio</b> 6.x
+                        <div style="background:#13151f;border:1px solid #2d3142;
+                                    border-radius:14px;padding:16px;margin-top:8px;">
+                          <div style="font-weight:700;color:#60a5fa;margin-bottom:10px;
+                                      font-size:.85em;letter-spacing:.5px;">🛠️ TECH STACK</div>
+                          <div style="font-size:.78em;line-height:2.2;">
+                            <div style="color:#94a3b8;">🤖 <span style="color:#e2e8f0;font-weight:600;">Google ADK</span> 1.33</div>
+                            <div style="color:#94a3b8;">✨ <span style="color:#e2e8f0;font-weight:600;">Gemini 2.5 Flash</span></div>
+                            <div style="color:#94a3b8;">🍃 <span style="color:#e2e8f0;font-weight:600;">MongoDB Atlas MCP</span></div>
+                            <div style="color:#94a3b8;">☁️ <span style="color:#e2e8f0;font-weight:600;">Google Cloud Run</span></div>
+                            <div style="color:#94a3b8;">🐍 <span style="color:#e2e8f0;font-weight:600;">Python</span> 3.12</div>
                           </div>
-                          <div style="margin-top:12px;padding-top:10px;border-top:1px solid #c5cae9;">
-                            <div style="font-weight:800;color:#1a237e;margin-bottom:6px;font-size:.9em;">
-                              🗄️ Live Data</div>
-                            <div style="font-size:.78em;color:#3949ab;line-height:1.9;">
+                          <div style="margin-top:12px;padding-top:10px;border-top:1px solid #2d3142;">
+                            <div style="font-weight:700;color:#34d399;margin-bottom:8px;
+                                        font-size:.85em;letter-spacing:.5px;">🗄️ LIVE DATA</div>
+                            <div style="font-size:.75em;color:#64748b;line-height:2;">
                               20 tenants · 8 zones<br>
                               90 days history<br>
                               1,800+ revenue records<br>
@@ -500,21 +668,24 @@ def create_ui():
                                 height=520,
                                 render_markdown=True,
                                 placeholder=(
-                                    "<div style='text-align:center;padding:50px 20px;'>"
-                                    "<div style='font-size:3.5em;margin-bottom:16px;'>🏬</div>"
-                                    "<div style='font-size:1.3em;font-weight:700;color:#1a73e8;'>"
+                                    "<div style='text-align:center;padding:50px 20px;"
+                                    "background:#13151f;border-radius:12px;'>"
+                                    "<div style='font-size:3em;margin-bottom:12px;'>🏬</div>"
+                                    "<div style='font-size:1.2em;font-weight:700;"
+                                    "background:linear-gradient(90deg,#60a5fa,#22d3ee);"
+                                    "-webkit-background-clip:text;-webkit-text-fill-color:transparent;'>"
                                     "RetailPulse AI</div>"
-                                    "<div style='color:#888;margin-top:8px;font-size:.95em;'>"
-                                    "Your autonomous mall intelligence agent.<br>"
-                                    "Ask me anything or use Quick Actions →</div>"
-                                    "<div style='margin-top:20px;display:flex;gap:8px;"
+                                    "<div style='color:#64748b;margin-top:8px;font-size:.9em;'>"
+                                    "Autonomous mall intelligence.<br>"
+                                    "Ask anything or use Quick Actions →</div>"
+                                    "<div style='margin-top:16px;display:flex;gap:8px;"
                                     "justify-content:center;flex-wrap:wrap;'>"
-                                    "<span style='background:#e8f0fe;color:#1a73e8;padding:6px 12px;"
-                                    "border-radius:20px;font-size:.82em;'>📊 Revenue Analysis</span>"
-                                    "<span style='background:#e6f4ea;color:#137333;padding:6px 12px;"
-                                    "border-radius:20px;font-size:.82em;'>🚨 Anomaly Detection</span>"
-                                    "<span style='background:#fce8e6;color:#c5221f;padding:6px 12px;"
-                                    "border-radius:20px;font-size:.82em;'>💡 Promotion Planning</span>"
+                                    "<span style='background:#1e2130;color:#60a5fa;padding:5px 12px;"
+                                    "border-radius:20px;font-size:.78em;border:1px solid #2d3142;'>📊 Revenue</span>"
+                                    "<span style='background:#1e2130;color:#34d399;padding:5px 12px;"
+                                    "border-radius:20px;font-size:.78em;border:1px solid #2d3142;'>🚨 Anomalies</span>"
+                                    "<span style='background:#1e2130;color:#f59e0b;padding:5px 12px;"
+                                    "border-radius:20px;font-size:.78em;border:1px solid #2d3142;'>💡 Promotions</span>"
                                     "</div></div>"),
                                 avatar_images=(
                                     None,
@@ -522,7 +693,7 @@ def create_ui():
                             ),
                             textbox=gr.Textbox(
                                 placeholder="Ask anything: 'Which tenants are underperforming?' or 'Run anomaly scan'...",
-                                container=False, scale=7),
+                                container=False, scale=7, submit_btn="Send ➤"),
                             examples=[
                                 "Which tenants had the highest revenue this week?",
                                 "Run the daily anomaly scan and log any issues found",
@@ -531,7 +702,6 @@ def create_ui():
                                 "Which zones have the lowest footfall and why?",
                                 "Generate a weekly summary report and save it",
                             ],
-                            submit_btn="Send ➤",
                         )
 
                 for label, btn in btns:
@@ -542,9 +712,17 @@ def create_ui():
 
 
 if __name__ == "__main__":
-    import warnings
-    warnings.filterwarnings("ignore", category=UserWarning, module="gradio")
+    import gradio as gr
     print(f"\n🏬 RetailPulse AI — {MALL_NAME}")
     print(f"   Port: {PORT}\n")
     demo = create_ui()
-    demo.launch(server_name="0.0.0.0", server_port=PORT)
+    demo.launch(
+        server_name="0.0.0.0",
+        server_port=PORT,
+        css=CSS,
+        theme=gr.themes.Base(
+            primary_hue="blue",
+            neutral_hue="slate",
+            font=gr.themes.GoogleFont("Inter"),
+        ),
+    )
