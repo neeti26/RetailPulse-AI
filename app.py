@@ -349,6 +349,8 @@ HEADER = f"""
 
 def create_ui():
     import gradio as gr
+    import warnings
+    warnings.filterwarnings("ignore", category=UserWarning, module="gradio")
 
     with gr.Blocks(css=CSS, title=f"RetailPulse AI — {MALL_NAME}",
                    theme=gr.themes.Soft(primary_hue="blue", neutral_hue="slate")) as demo:
@@ -540,6 +542,8 @@ def create_ui():
 
 
 if __name__ == "__main__":
+    import warnings
+    warnings.filterwarnings("ignore", category=UserWarning, module="gradio")
     print(f"\n🏬 RetailPulse AI — {MALL_NAME}")
     print(f"   Port: {PORT}\n")
     demo = create_ui()
