@@ -18,6 +18,13 @@ from retailpulse.tools.custom_tools import (
     generate_alert_id,
     get_current_timestamp,
 )
+from retailpulse.tools.agentic_tools import (
+    plan_campaign_mission,
+    record_tool_call,
+    validate_query_result,
+    compute_revenue_anomaly_score,
+    complete_mission,
+)
 
 load_dotenv()
 
@@ -58,6 +65,11 @@ def create_anomaly_agent() -> Agent:
             calculate_percentage_change,
             generate_alert_id,
             get_current_timestamp,
+            plan_campaign_mission,
+            record_tool_call,
+            validate_query_result,
+            compute_revenue_anomaly_score,
+            complete_mission,
         ],
     )
 

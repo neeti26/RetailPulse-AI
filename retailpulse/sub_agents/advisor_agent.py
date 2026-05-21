@@ -20,6 +20,14 @@ from retailpulse.tools.custom_tools import (
     get_current_timestamp,
     get_day_of_week,
 )
+from retailpulse.tools.agentic_tools import (
+    validate_tenant_exists,
+    plan_campaign_mission,
+    record_tool_call,
+    validate_query_result,
+    compute_promotion_parameters,
+    complete_mission,
+)
 
 load_dotenv()
 
@@ -57,6 +65,12 @@ def create_advisor_agent() -> Agent:
             generate_promo_id,
             get_current_timestamp,
             get_day_of_week,
+            validate_tenant_exists,
+            plan_campaign_mission,
+            record_tool_call,
+            validate_query_result,
+            compute_promotion_parameters,
+            complete_mission,
         ],
     )
 

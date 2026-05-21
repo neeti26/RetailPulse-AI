@@ -23,6 +23,15 @@ from retailpulse.tools.custom_tools import (
     get_day_of_week,
     summarize_for_report,
 )
+from retailpulse.tools.agentic_tools import (
+    validate_tenant_exists,
+    plan_campaign_mission,
+    record_tool_call,
+    validate_query_result,
+    compute_revenue_anomaly_score,
+    compute_promotion_parameters,
+    complete_mission,
+)
 
 load_dotenv()
 
@@ -103,9 +112,9 @@ def create_agent() -> Agent:
         # Sub-agents: orchestrator can delegate tasks to these specialists
         sub_agents=[analytics_agent, anomaly_agent, advisor_agent, notification_agent],
         tools=[
-            # MongoDB MCP Server — full database superpowers
+            # MongoDB MCP Server — full database superpowers (20+ tools)
             _build_mongodb_toolset(),
-            # Custom utility tools
+            # Utility tools
             get_date_range,
             format_currency,
             calculate_percentage_change,
@@ -115,6 +124,14 @@ def create_agent() -> Agent:
             get_current_timestamp,
             get_day_of_week,
             summarize_for_report,
+            # Agentic loop tools — force Reason→Act→Observe→Repeat
+            validate_tenant_exists,
+            plan_campaign_mission,
+            record_tool_call,
+            validate_query_result,
+            compute_revenue_anomaly_score,
+            compute_promotion_parameters,
+            complete_mission,
         ],
     )
 

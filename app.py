@@ -308,6 +308,65 @@ def load_operations():
     )
 
 
+def load_observability():
+    """Load the observability tab — agent traces and performance metrics."""
+    import plotly.graph_objects as go
+    from retailpulse.observability import get_observability_metrics
+
+    metrics = get_observability_metrics()
+    DARK_PANEL = "#1a1d27"
+    GRID = "#1e2130"
+
+    # Metrics summary HTML
+    summary_html = f"""
+    <div style="display:flex;gap:12px;flex-wrap:wrap;padding:16px 0 8px 0;">
+      <div style="flex:1;min-width:130px;background:linear-gradient(135deg,#1e3a5f,#1d4ed8);
+                  border-radius:14px;padding:16px 18px;border:1px solid rgba(255,255,255,0.06);">
+        <div style="font-size:.68em;color:rgba(255,255,255,0.55);font-weight:700;letter-spacing:1px;">QUERIES (24H)</div>
+        <div style="font-size:1.8em;font-weight:800;color:#f1f5f9;">{metrics.get('total_queries',0)}</div>
+      </div>
+      <div style="flex:1;min-width:130px;background:linear-gradient(135deg,#14532d,#16a34a);
+                  border-radius:14px;padding:16px 18px;border:1px solid rgba(255,255,255,0.06);">
+        <div style="font-size:.68em;color:rgba(255,255,255,0.55);font-weight:700;letter-spacing:1px;">AVG LATENCY</div>
+        <div style="font-size:1.8em;font-weight:800;color:#f1f5f9;">{metrics.get('avg_latency_ms',0):,}ms</div>
+      </div>
+      <div style="flex:1;min-width:130px;background:linear-gradient(135deg,#3b0764,#7c3aed);
+                  border-radius:14px;padding:16px 18px;border:1px solid rgba(255,255,255,0.06);">
+        <div style="font-size:.68em;color:rgba(255,255,255,0.55);font-weight:700;letter-spacing:1px;">AVG TOOL CALLS</div>
+        <div style="font-size:1.8em;font-weight:800;color:#f1f5f9;">{metrics.get('avg_tool_calls',0)}</div>
+      </div>
+      <div style="flex:1;min-width:130px;background:linear-gradient(135deg,#14532d,#16a34a);
+                  border-radius:14px;padding:16px 18px;border:1px solid rgba(255,255,255,0.06);">
+        <div style="font-size:.68em;color:rgba(255,255,255,0.55);font-weight:700;letter-spacing:1px;">SUCCESS RATE</div>
+        <div style="font-size:1.8em;font-weight:800;color:#f1f5f9;">{metrics.get('success_rate',100)}%</div>
+      </div>
+    </div>"""
+
+    # Top collections bar chart
+    top_cols = metrics.get("top_collections", [])
+    col_fig = go.Figure()
+    if top_cols:
+        col_fig.add_trace(go.Bar(
+            x=[c["collection"] for c in top_cols],
+            y=[c["count"] for c in top_cols],
+            marker_color="#60a5fa",
+            hovertemplate="<b>%{x}</b><br>%{y} calls<extra></extra>"))
+    col_fig.update_layout(
+        title=dict(text="🗄️ Most Accessed Collections (24h)", font=dict(size=13, color="#94a3b8")),
+        height=240, plot_bgcolor=DARK_PANEL, paper_bgcolor=DARK_PANEL,
+        yaxis=dict(gridcolor=GRID, color="#64748b", zeroline=False),
+        xaxis=dict(color="#64748b"),
+        margin=dict(l=40, r=16, t=40, b=40), showlegend=False,
+        font=dict(color="#94a3b8"))
+
+    recent = metrics.get("recent_traces", [])
+    return (
+        summary_html,
+        col_fig,
+        recent or [{"Info": "No traces yet — run a query in the AI Assistant tab"}],
+    )
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Quick Actions
 # ─────────────────────────────────────────────────────────────────────────────
@@ -619,6 +678,31 @@ def create_ui():
 
                 demo.load(fn=load_operations,
                           outputs=[ops_alerts, ops_promos, ops_leases])
+
+            # ══════════════════════════════════════════════════════════════
+            # TAB 5 — OBSERVABILITY
+            # ══════════════════════════════════════════════════════════════
+            with gr.Tab("📡 Observability"):
+                gr.Markdown(
+                    "### Agent Execution Traces\n"
+                    "Every MongoDB MCP tool call is logged here. "
+                    "This is the audit trail that proves the agent is executing "
+                    "genuine multi-step agentic loops — not just passing prompts to Gemini."
+                )
+                obs_summary = gr.HTML(
+                    "<div style='color:#64748b;padding:12px;'>Click Refresh to load traces.</div>")
+                obs_col_chart = gr.Plot(label="Most Accessed Collections")
+                gr.Markdown("#### 🔍 Recent Agent Traces (Last 10)")
+                obs_traces = gr.Dataframe(
+                    headers=["Trace ID", "Query", "Latency", "Tool Calls", "Status"],
+                    interactive=False)
+
+                gr.Button("🔄 Refresh Observability", variant="primary").click(
+                    fn=load_observability,
+                    outputs=[obs_summary, obs_col_chart, obs_traces])
+
+                demo.load(fn=load_observability,
+                          outputs=[obs_summary, obs_col_chart, obs_traces])
 
             # ══════════════════════════════════════════════════════════════
             # TAB 4 — AI ASSISTANT

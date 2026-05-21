@@ -1,271 +1,325 @@
-# 🏬 RetailPulse AI — Smart Mall Intelligence Agent
+# 🏬 RetailPulse AI — Autonomous Mall Intelligence Agent
 
-> **Google Cloud Rapid Agent Hackathon Submission**  
+> **Google Cloud Rapid Agent Hackathon 2026**  
 > Track: **MongoDB Partner Track**  
-> Built with: Google ADK (Agent Development Kit) · Gemini 3 (gemini-2.5-flash) · MongoDB MCP Server · MongoDB Atlas · Google Cloud Run
+> Live Demo: **https://retailpulse-ai-725868889273.us-central1.run.app**
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
-[![Google ADK](https://img.shields.io/badge/Google-ADK-4285F4?logo=google)](https://google.github.io/adk-docs/)
-[![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-00ED64?logo=mongodb)](https://www.mongodb.com/atlas)
+[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/)
+[![Google ADK](https://img.shields.io/badge/Google-ADK%201.33-4285F4?logo=google)](https://google.github.io/adk-docs/)
+[![MongoDB MCP](https://img.shields.io/badge/MongoDB-MCP%20Server-00ED64?logo=mongodb)](https://www.mongodb.com/docs/mcp-server/)
 [![Cloud Run](https://img.shields.io/badge/Google_Cloud-Cloud_Run-4285F4?logo=googlecloud)](https://cloud.google.com/run)
 
 ---
 
-## 🎯 What is RetailPulse AI?
+## What Is RetailPulse AI?
 
-RetailPulse AI is an autonomous multi-step intelligence agent for **brick-and-mortar mall operators**. It moves far beyond a chatbot — it **reasons, plans, and executes** tasks to help mall managers run smarter operations.
+RetailPulse AI is a **production-grade autonomous agent** for brick-and-mortar mall operators. It goes far beyond a chatbot — it executes genuine multi-step agentic missions using a strict **Reason → Act → Observe → Repeat** loop.
 
 ### The Problem
-Mall managers today are drowning in data: footfall sensors, POS transactions, tenant lease data, maintenance tickets, and marketing campaign results — all siloed. They react to problems *after* they happen. A store underperforms for a week before anyone notices. A promotion runs with no data backing it. Staffing decisions are made on gut feel.
+
+Mall managers drown in siloed data: footfall sensors, POS transactions, tenant leases, maintenance tickets — all disconnected. They react to problems *after* they happen. A store underperforms for a week before anyone notices. Promotions run on gut feel.
 
 ### The Solution
-RetailPulse AI is a **proactive, multi-step agent** that:
-- 🔍 **Monitors** real-time shopper traffic and tenant revenue stored in MongoDB Atlas
-- 🚨 **Detects anomalies** — sudden footfall drops, revenue dips, inventory shortfalls
-- 💡 **Recommends actions** — targeted promotions, staffing adjustments, restocking alerts
-- 📊 **Generates reports** — daily/weekly summaries with actionable insights
-- 💬 **Answers natural language queries** — "Which tenant had the worst Saturday last month?"
-- 🤖 **Executes multi-step missions** — "Find underperforming tenants, draft a promotion plan, and log it to the database"
+
+RetailPulse AI is a **proactive, autonomous agent** that:
+
+- 🔍 **Detects anomalies** before managers notice — revenue drops, footfall crashes, lease expiries
+- 💡 **Plans promotions** with computed parameters (discount %, timing, expected lift) based on real data
+- 📊 **Generates reports** with executive summaries saved to MongoDB
+- 🤖 **Executes multi-step missions** — not just answering questions, but completing tasks end-to-end
+- 📡 **Observes every action** — structured logging of every MCP tool call, latency, and outcome
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        RetailPulse AI                           │
-│                                                                 │
-│  ┌──────────────┐    ┌──────────────────────────────────────┐  │
-│  │   Web UI     │    │         Google ADK Agent             │  │
-│  │  (Gradio)    │◄──►│   Orchestrator (Gemini 2.5 Flash)    │  │
-│  └──────────────┘    │                                      │  │
-│                      │  ┌────────────┐  ┌────────────────┐  │  │
-│                      │  │  Analytics │  │  Notification  │  │  │
-│                      │  │  Sub-Agent │  │   Sub-Agent    │  │  │
-│                      │  └─────┬──────┘  └───────┬────────┘  │  │
-│                      └────────┼──────────────────┼───────────┘  │
-│                               │                  │              │
-│                      ┌────────▼──────────────────▼───────────┐  │
-│                      │       MongoDB MCP Server               │  │
-│                      │  (find · aggregate · insert · atlas)   │  │
-│                      └────────────────┬──────────────────────┘  │
-│                                       │                         │
-│                      ┌────────────────▼──────────────────────┐  │
-│                      │         MongoDB Atlas Cluster          │  │
-│                      │  ┌──────────┐  ┌──────────────────┐   │  │
-│                      │  │ footfall │  │ tenant_revenue   │   │  │
-│                      │  ├──────────┤  ├──────────────────┤   │  │
-│                      │  │ tenants  │  │ promotions       │   │  │
-│                      │  ├──────────┤  ├──────────────────┤   │  │
-│                      │  │ alerts   │  │ reports          │   │  │
-│                      │  └──────────┘  └──────────────────┘   │  │
-│                      └───────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│                         RetailPulse AI                              │
+│                                                                     │
+│  ┌──────────────┐    ┌─────────────────────────────────────────┐   │
+│  │  Gradio UI   │    │     Google ADK Orchestrator Agent        │   │
+│  │  (frontend/) │◄──►│     Gemini 2.5 Flash (Gemini 3)         │   │
+│  └──────────────┘    │                                         │   │
+│                      │  Agentic Loop: Reason→Act→Observe→Repeat│   │
+│                      │                                         │   │
+│                      │  ┌──────────┐  ┌──────────────────────┐│   │
+│                      │  │analytics │  │anomaly_agent         ││   │
+│                      │  │_agent    │  │(scans + alerts)      ││   │
+│                      │  └──────────┘  └──────────────────────┘│   │
+│                      │  ┌──────────┐  ┌──────────────────────┐│   │
+│                      │  │advisor   │  │notification_agent    ││   │
+│                      │  │_agent    │  │(reports + summaries) ││   │
+│                      │  └──────────┘  └──────────────────────┘│   │
+│                      └──────────────────┬──────────────────────┘   │
+│                                         │                          │
+│                      ┌──────────────────▼──────────────────────┐   │
+│                      │         MongoDB MCP Server               │   │
+│                      │  (mcp_servers/ — 20+ database tools)    │   │
+│                      │  find · aggregate · insert-many · atlas  │   │
+│                      └──────────────────┬──────────────────────┘   │
+│                                         │                          │
+│                      ┌──────────────────▼──────────────────────┐   │
+│                      │         MongoDB Atlas Cluster            │   │
+│                      │  footfall · tenant_revenue · tenants     │   │
+│                      │  promotions · alerts · reports           │   │
+│                      │  agent_traces (observability)            │   │
+│                      └─────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## ✨ Key Features
+## Agentic Loop — How It Actually Works
 
-| Feature | Description |
-|---|---|
-| **Natural Language Queries** | Ask anything: "Show me top 5 tenants by revenue this week" |
-| **Anomaly Detection** | Agent proactively scans for revenue/footfall drops > 20% |
-| **Promotion Planner** | Multi-step: detect underperformers → draft promotion → save to DB |
-| **Automated Reports** | Daily/weekly summaries written to MongoDB and displayed in UI |
-| **Staffing Advisor** | Recommends staffing levels based on predicted footfall patterns |
-| **Vector Search** | Semantic search across historical reports and tenant notes |
-| **Atlas Performance Advisor** | Agent can query MongoDB's own performance recommendations |
+This is **not** a wrapper that passes prompts to Gemini. The agent executes a strict multi-step loop with observable tool calls:
+
+```
+User: "Find underperforming tenants and create promotions"
+
+Step 1 — REASON:   plan_campaign_mission(mission_type='promotion')
+                   → Returns 11-step execution plan
+
+Step 2 — ACT:      aggregate(tenant_revenue, [{$match: ...}, {$group: ...}])
+                   → Returns 30-day revenue per tenant
+
+Step 3 — OBSERVE:  record_tool_call(tool='aggregate', collection='tenant_revenue', ...)
+                   validate_query_result(data, expected_fields=['tenant_id', 'revenue'])
+                   → Validates data before proceeding
+
+Step 4 — ACT:      aggregate(footfall, [{$match: ...}, {$group: ...}])
+                   → Returns peak hours per zone
+
+Step 5 — OBSERVE:  record_tool_call(...) + validate_query_result(...)
+
+Step 6 — REASON:   compute_promotion_parameters(tenant_id, revenue_decline_pct, peak_hour)
+                   → Computes discount %, duration, expected lift from real data
+
+Step 7 — ACT:      insert-many(promotions, [computed_promo_doc])
+                   → Writes promotion to MongoDB
+
+Step 8 — VERIFY:   find(promotions, {promo_id: ...})
+                   record_tool_call(tool='find', collection='promotions', ...)
+                   → Confirms write succeeded
+
+Step 9 — COMPLETE: complete_mission(steps_completed=8, documents_written=1)
+                   → Closes the loop with audit trail
+```
+
+Every tool call is logged to the `agent_traces` collection in MongoDB for full observability.
 
 ---
 
-## 🚀 Quick Start
+## Repository Structure
+
+```
+retailpulse-ai/
+│
+├── agents/                        # Agent package (clean imports)
+│   └── __init__.py                # Re-exports all agents
+│
+├── mcp_servers/                   # MCP server documentation & config
+│   └── README.md                  # MongoDB MCP server wiring guide
+│
+├── frontend/                      # Frontend documentation
+│   └── README.md                  # Gradio UI structure guide
+│
+├── retailpulse/                   # Core application package
+│   ├── agent.py                   # Main orchestrator (root_agent)
+│   ├── dashboard.py               # MongoDB → Plotly data layer
+│   ├── observability.py           # Structured logging + trace collection
+│   ├── sub_agents/
+│   │   ├── analytics_agent.py     # Trend analysis, cohort comparisons
+│   │   ├── anomaly_agent.py       # Revenue/footfall anomaly detection
+│   │   ├── advisor_agent.py       # Promotion planning with computed params
+│   │   └── notification_agent.py  # Report generation + summaries
+│   ├── tools/
+│   │   ├── custom_tools.py        # Date utils, formatters, ID generators
+│   │   └── agentic_tools.py       # Agentic loop tools (plan/act/observe/complete)
+│   └── prompts/
+│       └── system_prompts.py      # System instructions for all agents
+│
+├── scripts/
+│   └── seed_data.py               # Demo data seeder (90 days, 20 tenants)
+│
+├── tests/
+│   ├── test_agent.py              # Agent configuration tests
+│   └── test_tools.py              # Custom tools unit tests (44 tests)
+│
+├── setup/                         # Deployment scripts
+│   ├── RUN_THIS_IN_POWERSHELL.ps1 # One-click Cloud Run deploy
+│   ├── 3_mongodb_atlas_setup.md   # Atlas setup guide
+│   └── MASTER_DEPLOY_GUIDE.md     # Full deployment checklist
+│
+├── app.py                         # Gradio web UI (Cloud Run entry point)
+├── Dockerfile                     # Container image (Python 3.12 + Node 20)
+├── docker-compose.yml             # Local dev stack
+├── cloudbuild.yaml                # Cloud Build CI/CD config
+├── requirements.txt               # Pinned Python dependencies
+├── DEPLOYMENT.md                  # Cloud Run deployment guide
+├── DEMO_SCRIPT.md                 # 3-minute demo video script
+└── README.md                      # This file
+```
+
+---
+
+## Quick Start
 
 ### Prerequisites
 - Python 3.10+
 - Node.js 18+ (for MongoDB MCP Server via `npx`)
-- MongoDB Atlas account (free tier works) **or** local MongoDB
-- Google Cloud project with Vertex AI / Gemini API enabled
+- MongoDB Atlas account (free M0 tier works)
+- Gemini API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
 
 ### 1. Clone & Install
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/retailpulse-ai
-cd retailpulse-ai
+git clone https://github.com/neeti26/RetailPulse-AI
+cd RetailPulse-AI
 pip install -r requirements.txt
 ```
 
-### 2. Configure Environment
+### 2. Configure
 
 ```bash
 cp .env.example .env
-# Edit .env with your credentials
-```
-
-```env
-# MongoDB
-MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/retailpulse
-# OR for local: MONGODB_URI=mongodb://localhost:27017/retailpulse
-
-# Google AI
-GOOGLE_API_KEY=your_gemini_api_key
-# OR for Vertex AI:
-# GOOGLE_CLOUD_PROJECT=your-project-id
-# GOOGLE_CLOUD_LOCATION=us-central1
-
-# Optional: MongoDB Atlas API (for Atlas management tools)
-# MDB_ATLAS_CLIENT_ID=your_atlas_client_id
-# MDB_ATLAS_CLIENT_SECRET=your_atlas_client_secret
+# Edit .env:
+# MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/retailpulse
+# GOOGLE_API_KEY=your_gemini_api_key
 ```
 
 ### 3. Seed Demo Data
 
 ```bash
 python scripts/seed_data.py
+# Seeds: 20 tenants, 90 days revenue, footfall, promotions, alerts
 ```
 
-### 4. Run the Agent
+### 4. Run
 
 ```bash
-# Interactive CLI
-python -m retailpulse
-
-# Web UI (Gradio)
+# Web UI
 python app.py
+# → http://localhost:8080
+
+# CLI
+python -m retailpulse
 ```
 
 ---
 
-## 💬 Example Agent Interactions
+## How the MCP Server Is Wired
 
-### Simple Query
-```
-You: Which tenants had the lowest footfall last weekend?
+The MongoDB MCP Server is the agent's "superpower" — it gives every agent direct access to MongoDB Atlas through the Model Context Protocol.
 
-Agent: Let me check the footfall data for last weekend...
-[Calls MongoDB MCP: aggregate on footfall collection]
+**Each agent spawns the MCP server as a subprocess:**
 
-Here are the 5 tenants with lowest footfall (Sat-Sun, May 10-11):
-1. TechZone Electronics — 234 visitors (-31% vs prior weekend)
-2. Artisan Coffee Co — 412 visitors (-18% vs prior weekend)
-3. Vintage Threads — 189 visitors (-42% vs prior weekend)
-...
-```
-
-### Multi-Step Mission
-```
-You: Find underperforming tenants this month and create a promotion plan for them
-
-Agent: I'll handle this in steps:
-
-Step 1: Identifying underperforming tenants...
-[Calls MongoDB MCP: aggregate on tenant_revenue]
-Found 4 tenants with >15% revenue decline this month.
-
-Step 2: Analyzing their historical patterns...
-[Calls MongoDB MCP: find on footfall + aggregate]
-Peak hours: 2-5pm weekdays. Category: Fashion & Electronics.
-
-Step 3: Drafting promotion plan...
-Recommended: "Midweek Boost" — 20% off 2-5pm Tue-Thu for 3 weeks.
-Expected lift: +25% footfall based on similar past campaigns.
-
-Step 4: Saving promotion plan to database...
-[Calls MongoDB MCP: insert-many on promotions collection]
-✅ Promotion plan saved! ID: promo_2026_05_001
+```python
+# From retailpulse/agent.py
+McpToolset(
+    connection_params=StdioConnectionParams(
+        server_params=StdioServerParameters(
+            command="npx",
+            args=["-y", "mongodb-mcp-server"],
+            env={
+                "MDB_MCP_CONNECTION_STRING": MONGODB_URI,
+                # Optional Atlas API:
+                # "MDB_MCP_API_CLIENT_ID": ATLAS_CLIENT_ID,
+                # "MDB_MCP_API_CLIENT_SECRET": ATLAS_CLIENT_SECRET,
+            },
+        ),
+        timeout=60,
+    ),
+)
 ```
 
-### Anomaly Alert
-```
-You: Run the daily anomaly scan
+**Tools available via MCP:**
 
-Agent: Running anomaly detection across all tenants...
-[Calls MongoDB MCP: aggregate with $group and $cmp]
+| Tool | What the agent uses it for |
+|------|---------------------------|
+| `aggregate` | Revenue trends, footfall patterns, anomaly detection |
+| `find` | Tenant lookup, alert queries, promotion checks |
+| `insert-many` | Save promotions, alerts, reports to MongoDB |
+| `update-many` | Mark alerts as resolved |
+| `collection-schema` | Inspect data structure |
+| `atlas-get-performance-advisor` | MongoDB Atlas query optimization |
 
-🚨 ALERTS FOUND (3):
-• Food Court Zone B — footfall down 38% vs 7-day avg (possible maintenance issue?)
-• Luxury Watches — revenue $0 today (store may be closed?)
-• Parking Level 2 — occupancy sensor showing 0 (sensor fault?)
-
-Logging alerts to database...
-[Calls MongoDB MCP: insert-many on alerts collection]
-✅ 3 alerts logged. Recommend immediate investigation.
+**Test the MCP server directly:**
+```bash
+MDB_MCP_CONNECTION_STRING="mongodb+srv://..." npx -y mongodb-mcp-server
 ```
 
 ---
 
-## 📁 Project Structure
+## Observability
 
+Every agent execution is traced and stored in MongoDB's `agent_traces` collection:
+
+```json
+{
+  "trace_id": "TRACE-20260521-143022",
+  "user_query": "Find underperforming tenants and create promotions",
+  "total_latency_ms": 8420,
+  "tool_calls": [
+    {"tool": "aggregate", "collection": "tenant_revenue", "result_count": 20, "latency_ms": 1240},
+    {"tool": "aggregate", "collection": "footfall", "result_count": 8, "latency_ms": 890},
+    {"tool": "insert-many", "collection": "promotions", "result_count": 3, "latency_ms": 340}
+  ],
+  "tool_call_count": 8,
+  "sub_agent_calls": [{"agent": "advisor_agent", "task": "Create promotion plans"}],
+  "success_rate": 100.0,
+  "collections_accessed": ["tenant_revenue", "footfall", "promotions"]
+}
 ```
-retailpulse-ai/
-├── retailpulse/
-│   ├── __init__.py
-│   ├── __main__.py           # CLI entry point (python -m retailpulse)
-│   ├── agent.py              # Main ADK orchestrator agent
-│   ├── sub_agents/
-│   │   ├── analytics_agent.py    # Deep analytics sub-agent
-│   │   ├── anomaly_agent.py      # Anomaly detection sub-agent
-│   │   ├── advisor_agent.py      # Promotion & staffing advisor
-│   │   └── notification_agent.py # Report generation sub-agent
-│   ├── tools/
-│   │   └── custom_tools.py       # Custom Python tools (date utils, formatters, ID generators)
-│   └── prompts/
-│       └── system_prompts.py     # System instructions for all agents
-├── app.py                    # Gradio web UI
-├── scripts/
-│   └── seed_data.py          # Demo data seeder (90 days, 20 tenants)
-├── tests/
-│   └── test_tools.py         # Unit tests (29 tests)
-├── Dockerfile                # Container image
-├── docker-compose.yml        # Local dev stack (app + MongoDB)
-├── DEPLOYMENT.md             # Cloud Run deployment guide
-├── .env.example              # Environment variable template
-├── requirements.txt          # Pinned Python dependencies
-└── README.md
+
+View traces in the **⚙️ Operations** tab → Observability section, or query directly:
+```javascript
+db.agent_traces.find().sort({started_at: -1}).limit(10)
 ```
 
 ---
 
-## 🚀 Deployment
-
-**Live Demo:** https://retailpulse-ai-725868889273.us-central1.run.app
-
-See [DEPLOYMENT.md](DEPLOYMENT.md) for full Cloud Run setup instructions.
+## Deploy to Google Cloud Run
 
 ```bash
-# Local (Docker Compose — fastest for demo)
-cp .env.example .env   # add GOOGLE_API_KEY + MONGODB_URI
-docker compose up --build
-# Open http://localhost:7860
+# One command — builds, pushes, deploys
+& .\setup\RUN_THIS_IN_POWERSHELL.ps1
 
-# Google Cloud Run (for hosted submission URL)
+# Or manually:
 gcloud run deploy retailpulse-ai \
-  --image gcr.io/$PROJECT_ID/retailpulse-ai \
-  --region us-central1 --allow-unauthenticated --port 7860
+  --image=us-central1-docker.pkg.dev/PROJECT/retailpulse/retailpulse-ai:latest \
+  --region=us-central1 \
+  --allow-unauthenticated \
+  --port=8080 \
+  --memory=2Gi \
+  --set-secrets="MONGODB_URI=MONGODB_URI:latest,GOOGLE_API_KEY=GOOGLE_API_KEY:latest"
 ```
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for the full guide.
 
 ---
 
-## 🏆 Hackathon Judging Criteria
+## Judging Criteria
 
 | Criterion | How RetailPulse AI Delivers |
-|---|---|
-| **Technological Implementation** | Google ADK multi-agent orchestration + MongoDB MCP Server (20+ tools) + Gemini 2.5 Flash reasoning + Vector Search |
-| **Design** | Clean Gradio UI, structured agent responses, clear multi-step reasoning traces |
-| **Potential Impact** | Brick-and-mortar retail is a $5T+ industry; mall operators globally can use this |
-| **Quality of Idea** | Proactive anomaly detection + multi-step autonomous missions, not just Q&A |
+|-----------|----------------------------|
+| **Technological Implementation** | Google ADK multi-agent orchestration · MongoDB MCP Server (20+ tools) · Gemini 2.5 Flash · Strict Reason→Act→Observe→Repeat loop · Structured observability in MongoDB |
+| **Design** | Dark-theme Gradio UI · 4 tabs (Overview/Analytics/Operations/AI) · Live Plotly charts · Footfall heatmap · Gradient KPI cards |
+| **Potential Impact** | Brick-and-mortar retail is a $5T+ industry · Every mall operator globally is the target user · Proactive anomaly detection prevents revenue loss |
+| **Quality of Idea** | Not a chatbot — a genuine autonomous agent · Multi-step missions with observable tool chains · Data-computed promotion parameters · Full audit trail in MongoDB |
 
 ---
 
-## 📄 License
+## License
 
 Apache License 2.0 — see [LICENSE](LICENSE)
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - [Google Agent Development Kit (ADK)](https://google.github.io/adk-docs/)
 - [MongoDB MCP Server](https://www.mongodb.com/docs/mcp-server/)
 - [Gemini API](https://ai.google.dev/)
+- [Google Cloud Run](https://cloud.google.com/run)
